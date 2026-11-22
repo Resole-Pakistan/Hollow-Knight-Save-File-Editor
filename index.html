@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hollow Knight Save Editor</title>
+<style>
+:root{color-scheme:dark;--bg:#0f0f0f;--panel:#161616;--line:#292929;--line2:#373737;--tx:#dcdcdc;--mut:#8d8d8d;--dim:#626262;--hi:#ededed;--acc:#d2d2d2;--acc2:#e6e6e6;--good:#7fc79b;--bad:#c48484}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:#0e0e0e;background-image:radial-gradient(1200px 700px at 70% -10%,#242424 0,#101010 60%,#0b0b0b 100%);background-repeat:no-repeat;color:var(--tx);font:14px/1.4 Inter,system-ui,Segoe UI,sans-serif;overflow-x:hidden}
+.serif{font-family:Georgia,"DejaVu Serif",serif}
+button{font:inherit;color:inherit;cursor:pointer}
+.top{height:68px;display:flex;align-items:center;gap:14px;padding:0 24px;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;background:#0f0f0ff5}
+.logo{font-family:Georgia,serif;font-size:21px;letter-spacing:.14em;color:var(--hi)}
+.logo small{display:block;font:10px Inter,sans-serif;letter-spacing:.3em;color:#7c7c7c;margin-top:2px}
+.file{margin-left:18px;padding:7px 14px;border:1px solid var(--line2);border-radius:20px;background:#171717;color:#afafaf;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
+.file b{color:var(--hi);font-weight:500}
+.sp{flex:1}
+.btn{padding:9px 15px;border-radius:8px;border:1px solid var(--line2);background:#1a1a1a;color:#cdcdcd;font-size:13px;white-space:nowrap}
+.btn:hover{border-color:#5b5b5b;background:#202020}
+.btn.p{background:#e3e3e3;color:#111111;border-color:#e3e3e3;font-weight:600}
+.btn.p:hover{background:#fff}
+.btn[disabled]{opacity:.35;pointer-events:none}
+.layout{display:grid;grid-template-columns:210px minmax(0,1fr) 300px;min-height:calc(100vh - 68px)}
+.nav{border-right:1px solid var(--line);padding:20px 12px}
+.nav button{display:flex;width:100%;align-items:center;gap:11px;padding:9px 11px;border-radius:8px;color:#959595;margin-bottom:3px;background:none;border:0;text-align:left}
+.nav button:hover{background:#181818}
+.nav button.a{background:#1e1e1e;color:var(--hi);box-shadow:inset 2px 0 0 var(--acc)}
+.nav h6{font-size:10px;letter-spacing:.25em;color:var(--dim);margin:18px 12px 8px;font-weight:500}
+.nav .img{width:24px!important;height:24px!important;border-radius:6px}
+.nav .img svg{width:13px;height:13px}
+.content{padding:24px 28px 60px;min-width:0}
+h2{font:400 19px Georgia,serif;letter-spacing:.08em;margin-bottom:14px;color:var(--hi)}
+.img{position:relative;border-radius:12px;background:linear-gradient(135deg,#242424,#161616);border:1px dashed #454545;display:flex;align-items:center;justify-content:center;color:#636363;flex:none;overflow:hidden}
+.img.ok{border-style:solid;border-color:#373737;background:#141414}
+.img img{position:absolute;inset:6%;width:88%;height:88%;object-fit:contain}
+.card{background:#161616;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.row{display:grid;gap:16px;margin-bottom:22px}
+.r3{grid-template-columns:1.35fr 1fr 1fr}.r2{grid-template-columns:1fr 1.6fr}
+.lab{font-size:10.5px;letter-spacing:.22em;color:#7c7c7c;margin-bottom:10px;text-transform:uppercase}
+.masks{display:flex;gap:7px;flex-wrap:wrap}
+.mask{width:38px;height:38px;border-radius:50% 50% 50% 50%/40% 40% 60% 60%;border:1px solid var(--line2);background:radial-gradient(circle at 35% 30%,#f5f5f5,#bababa);cursor:pointer;transition:transform .12s}
+.mask.off{opacity:.2;filter:grayscale(1)}
+.mask:hover{transform:translateY(-2px)}
+.val{font:26px Georgia,serif;color:#f4f4f4}
+.val small{font:12px Inter;color:#7c7c7c}
+.step{display:flex;align-items:center;gap:8px;margin-top:12px}
+.step button{min-width:30px;height:30px;padding:0 8px;border:1px solid var(--line2);border-radius:7px;color:#afafaf;background:#1a1a1a;font-size:12px}
+.step button:hover{border-color:#5b5b5b;color:#fff}
+.step em{font-style:normal;margin-left:auto;font-size:11.5px;color:var(--acc)}
+input[type=number],input[type=text]{background:#0f0f0f;border:1px solid var(--line2);color:var(--hi);border-radius:8px;padding:6px 10px;font:inherit;min-width:0}
+input:focus,textarea:focus{outline:1px solid var(--acc)}
+.geo{font:26px Georgia,serif;width:160px}
+.seg{display:flex;gap:6px;margin-top:8px}
+.seg button{flex:1;padding:7px 0;border-radius:8px;border:1px solid #313131;color:#8d8d8d;font-size:12px;background:none}
+.seg button.s{background:#e3e3e3;color:#111111;border-color:#e3e3e3;font-weight:600}
+.head{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.head h2{margin:0}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips button{padding:5px 12px;border-radius:16px;border:1px solid #313131;color:#8d8d8d;font-size:12px;background:none}
+.chips button.s{background:#232323;color:#dfdfdf;border-color:#4d4d4d}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:14px}
+.charm{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;contain:content}
+.charm:hover{border-color:#4e4e4e}
+.charm .cn{font-size:11.5px;text-align:center;color:#d8d8d8;min-height:28px;line-height:14px;display:flex;align-items:center}
+.charm.locked{opacity:.45}.charm.locked .img{filter:grayscale(1)}
+.charm.eq{border-color:var(--acc);box-shadow:0 0 0 1px #a8a8a844}
+.nt{display:flex;gap:4px}.nt i{width:9px;height:9px;border-radius:50%;border:1px solid #505050;display:block}.nt i.on{background:var(--acc2);border-color:var(--acc2)}
+.badge{position:absolute;top:-8px;right:8px;background:var(--acc);color:#101010;font-size:8.5px;letter-spacing:.14em;font-weight:700;padding:2px 7px;border-radius:9px}
+.eqbtn{font-size:10.5px;padding:3px 10px;border-radius:10px;border:1px solid var(--line2);background:none;color:var(--mut)}
+.eqbtn:hover{border-color:var(--acc);color:var(--hi)}
+.notch{display:flex;align-items:center;gap:10px;color:var(--mut);font-size:12.5px}
+.tiles{display:flex;gap:14px;flex-wrap:wrap}
+.tile{text-align:center;cursor:pointer;width:84px}
+.tile .nm{font-size:10.5px;margin-top:6px;color:#959595;line-height:13px}
+.tile.off{opacity:.35}.tile.off .img{filter:grayscale(1)}
+.tile.on .img{border-color:var(--acc)}
+.big{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.num{display:grid;grid-template-columns:48px minmax(0,1fr);grid-template-rows:auto auto;gap:6px 12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);contain:content}
+.num .img{grid-row:1/3;width:48px!important;height:48px!important}
+.num .nl{font-size:12.5px;color:#c4c4c4;line-height:1.25;min-width:0}
+.num .nl small{display:block;color:var(--dim);font-size:10.5px}
+.num .ctl{display:flex;gap:6px;align-items:stretch}
+.num .ctl input{flex:1;min-width:0;width:100%;text-align:center;height:34px}
+.num .ctl .sb{width:34px;flex:none;height:34px;padding:0;border:1px solid var(--line2);border-radius:8px;background:#222;color:#ccc;font-size:15px;line-height:1}
+.num .ctl .sb:hover{border-color:#666;color:#fff}
+.num.chk{grid-template-rows:auto;grid-template-columns:48px minmax(0,1fr) auto;cursor:pointer}
+.num.chk .img{grid-row:auto}
+.num.chk.off .img{filter:grayscale(1);opacity:.45}
+.num.chk:hover{border-color:#555}
+.jrow{display:grid;grid-template-columns:minmax(0,1fr) 90px 130px 70px;gap:10px;align-items:center;padding:7px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);font-size:12.5px;contain:content}
+.jn{display:flex;align-items:center;gap:12px;min-width:0}.jn>span{min-width:0}
+.img.ico{border-style:solid;border-color:#3a3a3a}
+.jrow.h{background:none;border:0;color:var(--dim);font-size:10.5px;letter-spacing:.15em;text-transform:uppercase}
+.jrow input[type=number]{width:100%;height:30px;text-align:center}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=checkbox]{accent-color:#c8c8c8;width:18px;height:18px;cursor:pointer}
+.mk{cursor:pointer;transition:transform .12s}.mk.off{opacity:.25;filter:grayscale(1)}.mk:hover{transform:translateY(-2px)}
+.side{border-left:1px solid var(--line);padding:22px 18px;background:#0e0e0e}
+.diff{margin-bottom:9px;padding:10px 12px;border-radius:10px;background:#181818;border:1px solid var(--line)}
+.diff b{font-weight:500;color:#dfdfdf;font-size:13px}
+.diff div{font-size:11.5px;color:var(--mut);margin-top:3px;word-break:break-all}
+.diff s{color:#a06a6a}.diff u{text-decoration:none;color:var(--good)}
+.raw{margin-top:8px;background:#0a0a0a;border:1px solid #232323;border-radius:10px;padding:12px;font:10.5px/1.7 Consolas,"DejaVu Sans Mono",monospace;color:#828282;word-break:break-all;max-height:220px;overflow:auto}
+.hint{margin-top:16px;color:#7c7c7c;font-size:11.5px;line-height:1.6}
+.drop{margin:8vh auto 0;max-width:620px;text-align:center;border:2px dashed #3f3f3f;border-radius:20px;padding:56px 30px;background:#141414}
+.drop h1{font:400 26px Georgia,serif;letter-spacing:.1em;color:var(--hi);margin-bottom:10px}
+.drop p{color:var(--mut);margin-bottom:18px;line-height:1.6}
+.drop .opt{margin-top:18px;font-size:12.5px;color:#959595}
+.cover{position:fixed;inset:0;background:#0f0f0fee;border:3px dashed var(--acc);z-index:50;display:flex;align-items:center;justify-content:center;font:22px Georgia,serif;letter-spacing:.1em;pointer-events:none}
+.rawbox{position:fixed;left:0;right:0;bottom:0;height:55vh;background:#0b0b0b;border-top:1px solid var(--line2);z-index:20;display:flex;flex-direction:column;padding:12px 18px;gap:10px}
+.rawbox textarea{flex:1;background:#080808;color:#afafaf;border:1px solid var(--line);border-radius:8px;padding:12px;font:12px/1.5 Consolas,"DejaVu Sans Mono",monospace;resize:none}
+.rawbox .bar{display:flex;gap:10px;align-items:center}
+.vlist{display:flex;flex-direction:column;gap:6px}
+.vrow{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:12px;align-items:center;padding:7px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);contain:content}
+.vrow span{font:12px Consolas,monospace;color:#afafaf;word-break:break-all}
+.vrow input[type=text],.vrow input[type=number]{width:100%}
+.hist{display:flex;flex-direction:column;gap:8px}
+.hitem{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#232323;border:1px solid #4d4d4d;color:#dfdfdf;padding:10px 18px;border-radius:10px;z-index:60;font-size:13px}
+@media(max-width:1100px){.layout{grid-template-columns:70px minmax(0,1fr)}.side{grid-column:1/-1;border-left:0;border-top:1px solid var(--line)}.nav button span,.nav h6{display:none}.r3,.r2{grid-template-columns:1fr}}
+@media(max-width:640px){.top{flex-wrap:wrap;height:auto;padding:10px 14px}.file{display:none}.content{padding:18px 14px}.vrow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="cover-slot"></div>
+  <div id="top-slot" class="top"></div>
+  <div class="layout">
+    <div id="nav-slot" class="nav"></div>
+    <div id="main-slot" class="content"></div>
+    <div id="side-slot" class="side"></div>
+  </div>
+  <div id="raw-slot"></div>
+  <div id="toast-slot"></div>
+</div>
+<input id="fi" type="file" style="display:none">
+<script>
+"use strict";
+/* ============ Save codec (AES-256-ECB + base64 + C# header) ============ */
+const HDR=[0,1,0,0,0,255,255,255,255,1,0,0,0,0,0,0,0,6,1,0,0,0];
+const KEY=new TextEncoder().encode('UKu52ePUBwetZ9wNX88o54dnfKRu0T1l');
+const SBOX=new Uint8Array(256),INV=new Uint8Array(256);
+(function(){let p=1,q=1;const rl=(x,n)=>((x<<n)|(x>>(8-n)))&255;
+ do{p=(p^((p<<1)&255)^(p&128?27:0))&255;q^=(q<<1)&255;q^=(q<<2)&255;q^=(q<<4)&255;if(q&128)q^=9;
+  const x=q^rl(q,1)^rl(q,2)^rl(q,3)^rl(q,4);SBOX[p]=x^99;INV[x^99]=p}while(p!==1);
+ SBOX[0]=99;INV[99]=0})();
+const xt=x=>((x<<1)^(x&128?27:0))&255;
+function mul(a,b){let r=0;while(b){if(b&1)r^=a;a=xt(a);b>>=1}return r}
+const RK=(function(){const w=new Uint8Array(240);w.set(KEY);let rc=1;
+ for(let i=32;i<240;i+=4){let t=[w[i-4],w[i-3],w[i-2],w[i-1]];const n=i/4;
+  if(n%8===0){t=[SBOX[t[1]]^rc,SBOX[t[2]],SBOX[t[3]],SBOX[t[0]]];rc=xt(rc)}else if(n%8===4)t=t.map(b=>SBOX[b]);
+  for(let j=0;j<4;j++)w[i+j]=w[i-32+j]^t[j]}return w})();
+function encBlock(s){const a=(r)=>{for(let i=0;i<16;i++)s[i]^=RK[r*16+i]};a(0);
+ for(let r=1;r<=14;r++){for(let i=0;i<16;i++)s[i]=SBOX[s[i]];
+  const t=s.slice();for(let c=0;c<4;c++)for(let k=0;k<4;k++)s[k+4*c]=t[k+4*((c+k)%4)];
+  if(r<14)for(let c=0;c<4;c++){const i=4*c,a0=s[i],a1=s[i+1],a2=s[i+2],a3=s[i+3];
+   s[i]=xt(a0)^(xt(a1)^a1)^a2^a3;s[i+1]=a0^xt(a1)^(xt(a2)^a2)^a3;s[i+2]=a0^a1^xt(a2)^(xt(a3)^a3);s[i+3]=(xt(a0)^a0)^a1^a2^xt(a3)}
+  a(r)}}
+function decBlock(s){const a=(r)=>{for(let i=0;i<16;i++)s[i]^=RK[r*16+i]};a(14);
+ for(let r=13;r>=0;r--){const t=s.slice();for(let c=0;c<4;c++)for(let k=0;k<4;k++)s[k+4*((c+k)%4)]=t[k+4*c];
+  for(let i=0;i<16;i++)s[i]=INV[s[i]];a(r);
+  if(r>0)for(let c=0;c<4;c++){const i=4*c,a0=s[i],a1=s[i+1],a2=s[i+2],a3=s[i+3];
+   s[i]=mul(a0,14)^mul(a1,11)^mul(a2,13)^mul(a3,9);s[i+1]=mul(a0,9)^mul(a1,14)^mul(a2,11)^mul(a3,13);
+   s[i+2]=mul(a0,13)^mul(a1,9)^mul(a2,14)^mul(a3,11);s[i+3]=mul(a0,11)^mul(a1,13)^mul(a2,9)^mul(a3,14)}}}
+function aesDec(b){const o=b.slice(0,b.length-b.length%16);for(let i=0;i<o.length;i+=16){const s=o.subarray(i,i+16);decBlock(s)}return o.subarray(0,o.length-o[o.length-1])}
+function aesEnc(b){const p=16-b.length%16,o=new Uint8Array(b.length+p);o.fill(p);o.set(b);for(let i=0;i<o.length;i+=16)encBlock(o.subarray(i,i+16));return o}
+function lenPrefix(n){const o=[];while(n>=128){o.push((n&127)|128);n>>>=7}o.push(n);return o}
+function decodeSave(u8){let b=u8.subarray(HDR.length,u8.length-1);let n=0;for(let i=0;i<5;i++){n++;if(!(b[i]&128))break}b=b.subarray(n);
+ let s='';for(let i=0;i<b.length;i+=8192)s+=String.fromCharCode.apply(null,b.subarray(i,i+8192));
+ s=s.replace(/[^A-Za-z0-9+\/=]/g,'');const bin=atob(s),raw=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)raw[i]=bin.charCodeAt(i);
+ return new TextDecoder().decode(aesDec(raw))}
+function encodeSave(json){const enc=aesEnc(new TextEncoder().encode(json));let s='';for(let i=0;i<enc.length;i+=8192)s+=String.fromCharCode.apply(null,enc.subarray(i,i+8192));
+ const b64=new TextEncoder().encode(btoa(s)),lp=lenPrefix(b64.length),o=new Uint8Array(HDR.length+lp.length+b64.length+1);
+ o.set(HDR);o.set(lp,HDR.length);o.set(b64,HDR.length+lp.length);o[o.length-1]=11;return o}
+
+/* ============ Image links & caches ============ */
+const CDN='https://cdn.wikimg.net/en/hkwiki/images/thumb/';
+const CH=[null,
+["Gathering Swarm","8/8a/Gathering_Swarm.png/67px-Gathering_Swarm.png",1],["Wayward Compass","7/7d/Wayward_Compass.png/71px-Wayward_Compass.png",1],["Grubsong","7/78/Grubsong.png/72px-Grubsong.png",1],
+["Stalwart Shell","f/f2/Stalwart_Shell.png/72px-Stalwart_Shell.png",2],["Baldur Shell","2/21/Baldur_Shell.png/72px-Baldur_Shell.png",2],["Fury of the Fallen","4/4f/Fury_of_the_Fallen.png/71px-Fury_of_the_Fallen.png",2],
+["Quick Focus","6/6a/Quick_Focus.png/69px-Quick_Focus.png",3],["Lifeblood Heart","7/7c/Lifeblood_Heart.png/68px-Lifeblood_Heart.png",2],["Lifeblood Core","8/81/Lifeblood_Core.png/70px-Lifeblood_Core.png",3],
+["Defender's Crest","5/56/Defender%27s_Crest.png/72px-Defender%27s_Crest.png",1],["Flukenest","7/79/Flukenest.png/72px-Flukenest.png",3],["Thorns of Agony","8/8f/Thorns_of_Agony.png/72px-Thorns_of_Agony.png",1],
+["Mark of Pride","6/69/Mark_of_Pride.png/71px-Mark_of_Pride.png",3],["Steady Body","f/f5/Steady_Body.png/69px-Steady_Body.png",1],["Heavy Blow","f/f6/Heavy_Blow.png/72px-Heavy_Blow.png",2],
+["Sharp Shadow","1/13/Sharp_Shadow.png/71px-Sharp_Shadow.png",2],["Spore Shroom","7/78/Spore_Shroom.png/72px-Spore_Shroom.png",1],["Longnail","d/d1/Longnail.png/72px-Longnail.png",2],
+["Shaman Stone","5/5e/Shaman_Stone.png/72px-Shaman_Stone.png",3],["Soul Catcher","c/ca/Soul_Catcher.png/71px-Soul_Catcher.png",2],["Soul Eater","6/6c/Soul_Eater.png/72px-Soul_Eater.png",4],
+["Glowing Womb","c/c6/Glowing_Womb.png/72px-Glowing_Womb.png",2],["Fragile Heart","1/13/Fragile_Heart.png/72px-Fragile_Heart.png",2],["Fragile Greed","b/b6/Fragile_Greed.png/69px-Fragile_Greed.png",2],
+["Fragile Strength","7/7b/Fragile_Strength.png/69px-Fragile_Strength.png",3],["Nailmaster's Glory","0/0f/Nailmaster%27s_Glory.png/68px-Nailmaster%27s_Glory.png",1],["Joni's Blessing","6/67/Joni%27s_Blessing.png/72px-Joni%27s_Blessing.png",4],
+["Shape of Unn","b/b4/Shape_of_Unn.png/69px-Shape_of_Unn.png",2],["Hiveblood","e/eb/Hiveblood.png/64px-Hiveblood.png",4],["Dream Wielder","9/94/Dream_Wielder.png/72px-Dream_Wielder.png",1],
+["Dashmaster","7/70/Dashmaster.png/71px-Dashmaster.png",2],["Quick Slash","5/5f/Quick_Slash.png/67px-Quick_Slash.png",3],["Spell Twister","3/33/Spell_Twister.png/66px-Spell_Twister.png",2],
+["Deep Focus","e/ea/Deep_Focus.png/68px-Deep_Focus.png",2],["Grubberfly's Elegy","b/bd/Grubberfly%27s_Elegy.png/68px-Grubberfly%27s_Elegy.png",3],["Kingsoul / Void Heart","3/34/Kingsoul.png/67px-Kingsoul.png",5],
+["Sprintmaster","e/e9/Sprintmaster.png/72px-Sprintmaster.png",1],["Dreamshield","4/47/Dreamshield.png/72px-Dreamshield.png",3],["Weaversong","2/26/Weaversong.png/72px-Weaversong.png",2],["Grimmchild","9/91/Grimmchild.png/72px-Grimmchild.png",2]];
+const ABIL=[
+["hasDash","Mothwing Cloak","a/a2/Icon_HK_Mothwing_Cloak.png/72px-Icon_HK_Mothwing_Cloak.png"],
+["hasWalljump","Mantis Claw","b/bf/Icon_HK_Mantis_Claw.png/72px-Icon_HK_Mantis_Claw.png"],
+["hasDoubleJump","Monarch Wings","9/9b/Icon_HK_Monarch_Wings.png/72px-Icon_HK_Monarch_Wings.png"],
+["hasSuperDash","Crystal Heart","e/e8/Icon_HK_Crystal_Heart.png/72px-Icon_HK_Crystal_Heart.png"],
+["hasAcidArmour","Isma's Tear","8/8c/Icon_HK_Isma%27s_Tear.png/66px-Icon_HK_Isma%27s_Tear.png"],
+["hasShadowDash","Shade Cloak","7/75/Icon_HK_Shade_Cloak.png/72px-Icon_HK_Shade_Cloak.png"],
+["hasDreamNail","Dream Nail","a/a2/Icon_HK_Dream_Nail.png/45px-Icon_HK_Dream_Nail.png"],
+["dreamNailUpgraded","Awoken Dream Nail","b/b0/Icon_HK_Awoken_Dream_Nail.png/45px-Icon_HK_Awoken_Dream_Nail.png"],
+["hasDreamGate","Dreamgate","3/34/Icon_HK_Dreamgate.png/72px-Icon_HK_Dreamgate.png"],
+["hasCyclone","Cyclone Slash","4/4f/Icon_HK_Cyclone_Slash.png/69px-Icon_HK_Cyclone_Slash.png"],
+["hasDashSlash","Dash Slash","f/fd/Icon_HK_Dash_Slash.png/69px-Icon_HK_Dash_Slash.png"],
+["hasUpwardSlash","Great Slash","4/43/Icon_HK_Great_Slash.png/69px-Icon_HK_Great_Slash.png"]];
+const SPELLS=[
+["fireballLevel",["Vengeful Spirit","a/ab/Icon_HK_Vengeful_Spirit.png/72px-Icon_HK_Vengeful_Spirit.png"],["Shade Soul","e/ef/Icon_HK_Shade_Soul.png/72px-Icon_HK_Shade_Soul.png"]],
+["quakeLevel",["Desolate Dive","c/c3/Icon_HK_Desolate_Dive.png/72px-Icon_HK_Desolate_Dive.png"],["Descending Dark","a/a1/Icon_HK_Descending_Dark.png/72px-Icon_HK_Descending_Dark.png"]],
+["screamLevel",["Howling Wraiths","1/16/Icon_HK_Howling_Wraiths.png/56px-Icon_HK_Howling_Wraiths.png"],["Abyss Shriek","b/bf/Icon_HK_Abyss_Shriek.png/56px-Icon_HK_Abyss_Shriek.png"]]];
+const NUMS=[["geo","Geo"],["simpleKeys","Simple Keys"],["rancidEggs","Rancid Eggs"],["grubsCollected","Grubs collected"],["ore","Pale Ore"],["dreamOrbs","Essence"],["heartPieces","Mask shards (to next mask)"],["vesselFragments","Vessel fragments (to next vessel)"],["charmSlots","Charm notches"],["nailSmithUpgrades","Nail upgrades (0-4)"]];
+const BOOLS=[["hasLantern","Lumafly Lantern"],["hasMap","Map"],["hasQuill","Quill"],["hasTramPass","Tram Pass"],["hasCityKey","City Crest"],["hasSlykey","Shopkeeper's Key"],["hasWhiteKey","Elegant Key"],["hasLoveKey","Love Key"],["hasKingsBrand","King's Brand"],["hasXunFlower","Delicate Flower"],["hasSpell","Has any spell"]];
+const KIMG={
+  simpleKeys:"https://static0.fextralifeimages.com/file/hollowknight/a/a6/Hollow_knight_wiki_simple_key_icon_small.png",
+  hasWhiteKey:"https://static0.fextralifeimages.com/file/hollowknight/f/fd/Hollow_knight_wiki_elegant_key_icon_small.png",
+  hasLoveKey:"https://static0.fextralifeimages.com/file/hollowknight/f/f3/Hollow_knight_wiki_love_key_icon_small.png",
+  hasKingsBrand:"https://static0.fextralifeimages.com/file/hollowknight/1/1a/Hollow_knight_wiki_kings_brand_icon_small.png",
+  hasCityKey:"https://static0.fextralifeimages.com/file/hollowknight/2/2b/Hollow_knight_wiki_city_crest_icon_small.png",
+  hasSlykey:"https://static0.fextralifeimages.com/file/hollowknight/e/eb/Hollow_knight_wiki_shopkeepers_key_icon_small.png",
+  hasTramPass:"https://static0.fextralifeimages.com/file/hollowknight/1/13/Hollow_knight_wiki_tram_pass_icon_small.png",
+  hasLantern:"https://static0.fextralifeimages.com/file/hollowknight/0/00/Hollow_knight_wiki_lumafly_lantern_icon_small.png",
+  hasXunFlower:"https://static0.fextralifeimages.com/file/hollowknight/e/e1/Hollow_knight_wiki_delicate_flower_icon_small.png",
+  hasQuill:"https://static0.fextralifeimages.com/file/hollowknight/b/b0/Hollow_knight_wiki_map_and_quill_icon_small.png",
+  geo:"https://static0.fextralifeimages.com/file/hollowknight/0/03/Hollow_knight_wiki_geo_icon.png",
+  heartPieces:"https://static0.fextralifeimages.com/file/hollowknight/a/a6/Mask-shard-hollow-knight-wiki-guide.png",
+  rancidEggs:"https://static0.fextralifeimages.com/file/hollowknight/2/20/Hollow_knight_wiki_rancid_egg_icon_small.png",
+  ore:"https://static0.fextralifeimages.com/file/hollowknight/f/f8/Hollow_knight_wiki_pale_ore_icon_small.png",
+  grubsCollected:"https://static0.fextralifeimages.com/file/hollowknight/4/4c/Hollow_knight_wiki_grub_icon_small.png",
+  dreamOrbs:"https://static0.fextralifeimages.com/file/hollowknight/b/bd/Hollow_knight_wiki_essence_icon_small.png",
+  vesselFragments:"https://static0.fextralifeimages.com/file/hollowknight/1/1e/Hollow_knight_wiki_vessel_fragment_icon_small.png",
+  nailSmithUpgrades:"https://static0.fextralifeimages.com/file/hollowknight/6/6c/Hollow_knight_wiki_pure_nail_icon_small.png",
+  hasMap:"https://static0.fextralifeimages.com/file/hollowknight/0/00/Hollow_knight_wiki_map_icon_small.png",
+  charmSlots:"https://static0.fextralifeimages.com/file/hollowknight/2/2a/Hollow_knight_wiki_charm_notch_icon_small.png"};
+const DREAMER_IMG="https://static0.fextralifeimages.com/file/hollowknight/7/70/Dreamers_npc_icon_hollow_knight_wiki.png";
+
+const IMG_CACHE=new Map();
+const BAD_URLS=new Set();
+function md5hex(str){const bytes=new TextEncoder().encode(str),K=new Uint32Array(64),S=[7,12,17,22,5,9,14,20,4,11,16,23,6,10,15,21];
+ for(let i=0;i<64;i++)K[i]=Math.floor(Math.abs(Math.sin(i+1))*4294967296)>>>0;
+ const n=bytes.length,len=((n+8>>6)+1)<<6,buf=new Uint8Array(len);buf.set(bytes);buf[n]=128;const dv=new DataView(buf.buffer);dv.setUint32(len-8,(n*8)>>>0,true);dv.setUint32(len-4,Math.floor(n*8/4294967296),true);
+ let a0=0x67452301,b0=0xefcdab89,c0=0x98badcfe,d0=0x10325476;
+ for(let o=0;o<len;o+=64){const M=[];for(let i=0;i<16;i++)M[i]=dv.getUint32(o+i*4,true);let A=a0,B=b0,C=c0,D=d0;
+  for(let i=0;i<64;i++){let F,gg;if(i<16){F=(B&C)|(~B&D);gg=i}else if(i<32){F=(D&B)|(~D&C);gg=(5*i+1)%16}else if(i<48){F=B^C^D;gg=(3*i+5)%16}else{F=C^(B|~D);gg=(7*i)%16}
+   F=(F+A+K[i]+M[gg])>>>0;A=D;D=C;C=B;const sh=S[(i>>4)*4+(i%4)];B=(B+(((F<<sh)|(F>>>(32-sh))))>>>0)>>>0}
+  a0=(a0+A)>>>0;b0=(b0+B)>>>0;c0=(c0+C)>>>0;d0=(d0+D)>>>0}
+ const o=new DataView(new ArrayBuffer(16));[a0,b0,c0,d0].forEach((v,i)=>o.setUint32(i*4,v,true));return Array.from(new Uint8Array(o.buffer)).map(b=>b.toString(16).padStart(2,'0')).join('')}
+const FXB='https://static0.fextralifeimages.com/file/hollowknight/';
+const fxu=fn=>{const h=md5hex(fn);return FXB+h[0]+'/'+h.slice(0,2)+'/'+fn};
+const slug=n=>{const t=n.replace(/['’.]/g,'').replace(/[^A-Za-z0-9 -]/g,'').trim().replace(/ +/g,'_');return t?t[0].toUpperCase()+t.slice(1).toLowerCase():t};
+const cachedUrls=(key,fn)=>{if(!IMG_CACHE.has(key))IMG_CACHE.set(key,fn());return IMG_CACHE.get(key)};
+const enemyImg=n=>cachedUrls('e:'+n,()=>{const s=slug(n);return[s+'_enemy_hollow_knight_wiki_guide.png',s+'_enemy_icon_hollow_knight_wiki.png'].map(fxu)});
+const bossImg=n=>cachedUrls('b:'+n,()=>{const s=slug(n);return[s+'_boss_icon_hollow_knight_wiki.png',s+'_boss_hollow_knight_wiki_guide.png',s+'_enemy_hollow_knight_wiki_guide.png',s+'_npc_icon_hollow_knight_wiki.png'].map(fxu)});
+const npcImg=n=>cachedUrls('n:'+n,()=>{const s=slug(n),h=s.toLowerCase().replace(/_/g,'-');return[s+'_npc_icon_hollow_knight_wiki.png',h+'-npc-hollow-knight-wiki-guide.png',s+'_boss_icon_hollow_knight_wiki.png'].map(fxu).concat(DREAMER_IMG)});
+
+const NAILS=['8/85/Hollow_knight_wiki_old_nail_icon.png','c/cf/Hollow_knight_wiki_sharpened_nail_icon.png','4/46/Hollow_knight_wiki_channelled_nail_icon.png','0/04/Hollow_knight_wiki_coiled_nail_icon.png','e/e4/Hollow_knight_wiki_pure_nail_icon.png'].map(x=>FXB+x);
+Object.assign(KIMG,{ore:FXB+'2/27/Plae-ore-hollow-knight-wiki-guide.png',dreamOrbs:FXB+'f/fd/Dream-nail-ability-hollow-knight-wiki-guide.png',vesselFragments:FXB+'1/1b/Vessel-fragment-hollow-knight-wiki-guide.png',soulVessel:FXB+'6/6e/Soul-vessel-stats-hollow-knight-wiki-guide.png',grubsCollected:FXB+'a/a5/Grub_npcs_hollow_knight_wiki_guide.png',grubRewards:FXB+'a/a5/Grub_npcs_hollow_knight_wiki_guide.png',hasMap:KIMG.hasQuill,hasSpell:CDN+'a/ab/Icon_HK_Vengeful_Spirit.png/72px-Icon_HK_Vengeful_Spirit.png',guardiansDefeated:DREAMER_IMG,charmSlots:''});
+const NOTCH='<svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="3.4" fill="currentColor"/><circle cx="16.5" cy="12" r="3.4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>';
+function imgFor(k,ik){const key=ik||k;if(key==='nailSmithUpgrades')return NAILS[g('nailSmithUpgrades',0)]||NAILS[0];return KIMG[key]||''}
+const BN={zoteDefeated:'Zote the Mighty',killedBigFly:'Gruz Mother',killedMawlek:'Brooding Mawlek',killedFalseKnight:'False Knight',killedMegaMossCharger:'Massive Moss Charger',killedInfectedKnight:'Broken Vessel',killedMantisLord:'Mantis Lords',killedMageLord:'Soul Master',killedHornet:'Hornet',killedHollowKnight:'Hollow Knight',falseKnightDefeated:'False Knight',falseKnightDreamDefeated:'Failed Champion',mawlekDefeated:'Brooding Mawlek',giantBuzzerDefeated:'Vengefly King',giantFlyDefeated:'Gruz Mother',blocker1Defeated:'Watcher Knight (1)',blocker2Defeated:'Watcher Knight (2)',collectorDefeated:'The Collector',hornet1Defeated:'Hornet (Protector)',hornetOutskirtsDefeated:'Hornet (Sentinel)',mageLordDreamDefeated:'Soul Tyrant',infectedKnightDreamDefeated:'Lost Kin',whiteDefenderDefeated:'White Defender',greyPrinceDefeated:'Grey Prince Zote',megaMossChargerDefeated:'Massive Moss Charger',defeatedDoubleBlockers:'Watcher Knights',defeatedMegaJelly:'Uumuu',defeatedMantisLords:'Mantis Lords',mageLordDefeated:'Soul Master',defeatedDungDefender:'Dung Defender',flukeMotherDefeated:'Flukemarm',defeatedMegaBeamMiner:'Crystal Guardian',defeatedMegaBeamMiner2:'Enraged Guardian',defeatedNightmareGrimm:'Nightmare King Grimm'};
+const bossName=k=>BN[k]||nice(k);
+const bossBase=k=>bossName(k).replace(/\s*\(.*\)/,'');
+const AREAS={mapDirtmouth:['Dirtmouth','Menderbug'],mapCrossroads:['Forgotten Crossroads','Crawlid'],mapGreenpath:['Greenpath','Mosscreep'],mapFogCanyon:['Fog Canyon','Ooma'],mapRoyalGardens:["Queen's Gardens",'Mantis Traitor'],mapFungalWastes:['Fungal Wastes','Shrumeling'],mapCity:['City of Tears','Husk Sentry'],mapWaterways:['Royal Waterways','Flukefey'],mapMines:['Crystal Peak','Crystal Crawler'],mapDeepnest:['Deepnest','Dirtcarver'],mapCliffs:['Howling Cliffs','Gruzzer'],mapOutskirts:["Kingdom's Edge",'Great Hopper'],mapRestingGrounds:['Resting Grounds','Wandering Husk'],mapAbyss:['Ancient Basin / Abyss','Void Tendrils']};
+const ENM={crawler:'Crawlid',buzzer:'Vengefly',bouncer:'Gruzzer',climber:'Tiktik',hopper:'Hopper',worm:'Goam',spitter:'Aspid Hunter',hatcher:'Aspid Mother',hatchling:'Aspid Hatchling',zombierunner:'Wandering Husk',zombiehornhead:'Husk Hornhead',zombieleaper:'Leaping Husk',zombiebarger:'Husk Bully',zombieshield:'Husk Warrior',zombieguard:'Husk Guard',zombieminer:'Husk Miner',zombiebeamminer:'Crystallised Husk',blocker:'Baldur',bigbuzzer:'Vengefly King',bigfly:'Gruz Mother',mossknight:'Moss Knight',mossflyer:'Mossfly',mosscharger:'Moss Charger',mosswalker:'Mosscreep',lazyflyer:'Aluba',acidflyer:'Duranda',acidwalker:'Durandoo',fungusflyer:'Fungoon',fungcrawler:'Ambloom',mushroombrawler:'Shrumal Warrior',mushroombaby:'Shrumeling',mushroomturret:'Fungling',mantis:'Mantis Youth',mantistraitor:'Mantis Traitor',mantisheavy:'Mantis Petra',deepling:'Deepling',stalkingdevout:'Stalking Devout',spider:'Little Weaver',mawlekmini:'Lesser Mawlek',lesserMawlek:'Lesser Mawlek',blobble:'Obble',hornet:'Hornet',squit:'Squit',fluke:'Flukefey',flukeman:'Flukemon',jellyfish:'Ooma',jellyEgg:'Ooma',menderbug:'Menderbug',maggot:'Maggot',lightseed:'Lightseed',gluttonousHusk:'Gluttonous Husk',shadecreeper:'Shadow Creeper',healthcocoon:'Lifeseed',royalretainer:'Royal Retainer'};
+const enemyName=n=>ENM[n.toLowerCase()]||nice(n);
+const NAILNAMES=["Old Nail","Sharpened","Channelled","Coiled","Pure Nail"];
+const GLYPH='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>';
+
+/* ============ State ============ */
+const S={tab:'overview',orig:null,cur:null,name:'',sw:false,filter:'all',q:'',raw:false,rawText:'',drag:false,toast:'',sceneDirty:false};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pd=()=>S.cur.playerData;
+const has=k=>S.cur&&Object.prototype.hasOwnProperty.call(pd(),k);
+const g=(k,d=0)=>has(k)?pd()[k]:d;
+const set=(k,v)=>{pd()[k]=v};
+const pretty=o=>JSON.stringify(o,null,2);
+
+function img(f,sz,alt,glyph){
+  const arr=[].concat(f||[]).filter(Boolean).map(u=>u.startsWith('http')?u:CDN+u).filter(u=>!BAD_URLS.has(u));
+  const gl=(glyph||GLYPH).replace('<svg','<svg width="'+sz*.36+'" height="'+sz*.36+'"');
+  return `<div class="img ${glyph?'ico':''}" style="width:${sz}px;height:${sz}px">${gl}${arr.length?`<img src="${arr[0]}" data-alt="${arr.slice(1).join(' ')}" alt="${esc(alt||'')}" referrerpolicy="no-referrer" loading="lazy">`:''}</div>`;
+}
+document.addEventListener('error',e=>{
+  const t=e.target;
+  if(t.tagName==='IMG'&&t.closest('.img')){
+    BAD_URLS.add(t.src);
+    const alt=(t.dataset.alt||'').split(' ').filter(u=>u&&!BAD_URLS.has(u));
+    if(alt.length){t.src=alt.shift();t.dataset.alt=alt.join(' ');return}
+    t.parentNode.classList.remove('ok');t.remove();
+  }
+},true);
+document.addEventListener('load',e=>{const t=e.target;if(t.tagName==='IMG'&&t.closest('.img'))t.parentNode.classList.add('ok')},true);
+
+function toast(m){S.toast=m;renderToast();clearTimeout(toast.t);toast.t=setTimeout(()=>{S.toast='';renderToast()},2600)}
+
+/* history */
+function hist(){try{return JSON.parse(localStorage.getItem('hollowHistory')||'[]')}catch(e){return[]}}
+function saveHist(name,json){try{let h=hist().filter(x=>x.json!==json);h.unshift({name,json,date:Date.now()});localStorage.setItem('hollowHistory',JSON.stringify(h.slice(0,5)))}catch(e){}}
+
+/* load */
+function loadFile(f){if(!f)return;const r=new FileReader();
+ r.onload=()=>{try{const txt=S.sw?r.result:decodeSave(new Uint8Array(r.result));const o=JSON.parse(txt);if(!o.playerData)throw new Error('no playerData');openSave(o,f.name);saveHist(f.name,JSON.stringify(o))}
+  catch(err){console.warn(err);alert('The file could not be decrypted.'+(S.sw?'':' If this is a Switch save, tick "Switch save (plain text)" first.'))}};
+ S.sw?r.readAsText(f):r.readAsArrayBuffer(f)}
+function openSave(o,name){S.orig=JSON.parse(JSON.stringify(o));S.cur=JSON.parse(JSON.stringify(o));S.name=name;S.tab='overview';S.raw=false;S.sceneDirty=false;renderAll();window.scrollTo(0,0)}
+
+/* fast diff */
+function label(k){let m;if(BN[k])return BN[k]+' defeated';if(m=/^gotCharm_(\d+)$/.exec(k))return 'Charm owned: '+(CH[+m[1]]?CH[+m[1]][0]:m[1]);if(m=/^equippedCharm_(\d+)$/.exec(k))return 'Charm equipped: '+(CH[+m[1]]?CH[+m[1]][0]:m[1]);
+ const f=NUMS.concat(BOOLS).find(x=>x[0]===k);const a=ABIL.find(x=>x[0]===k);return f?f[1]:a?a[1]:k}
+
+function diffs(){
+  if(!S.cur)return[];
+  const o=S.orig.playerData,c=pd(),out=[];
+  const keys=new Set([...Object.keys(o),...Object.keys(c)]);
+  keys.forEach(k=>{
+    const ov=o[k],cv=c[k];
+    if(ov===cv)return;
+    if(typeof ov==='object'&&ov!==null&&typeof cv==='object'&&cv!==null){
+      const a=JSON.stringify(ov),b=JSON.stringify(cv);
+      if(a!==b)out.push([k,a,b]);
+    }else{
+      out.push([k,ov===undefined?'—':JSON.stringify(ov),cv===undefined?'(removed)':JSON.stringify(cv)]);
+    }
+  });
+  if(S.sceneDirty)out.push(['sceneData','original','edited (raw)']);
+  return out;
+}
+
+/* actions */
+function equippedSum(){let s=0;for(let i=1;i<=40;i++)if(g('equippedCharm_'+i,false))s+=g('charmCost_'+i,CH[i][2]);return s}
+function special(k){if(k==='nailSmithUpgrades')setNail(g(k));if(k==='maxHealthBase')setMasks(g(k));if(k==='charmSlots')syncCharms()}
+function syncCharms(){const eq=[];let own=0;for(let i=1;i<=40;i++){if(g('equippedCharm_'+i,false))eq.push(i);if(g('gotCharm_'+i,false))own++}
+ if(has('equippedCharms'))set('equippedCharms',eq);if(has('charmsOwned'))set('charmsOwned',own);if(has('charmSlotsFilled'))set('charmSlotsFilled',equippedSum());if(has('overcharmed'))set('overcharmed',equippedSum()>g('charmSlots',0))}
+function setMasks(n){n=Math.max(1,Math.min(9,n));['maxHealth','maxHealthBase','health'].forEach(k=>{if(has(k))set(k,n)});if(has('prevHealth'))set('prevHealth',n);if(has('maxHealthCap'))set('maxHealthCap',Math.max(g('maxHealthCap'),n))}
+function setVessels(n){n=Math.max(0,Math.min(3,n));if(has('MPReserveMax'))set('MPReserveMax',n*33);if(has('MPReserve'))set('MPReserve',Math.min(g('MPReserve'),n*33))}
+function setNail(n){set('nailSmithUpgrades',n);if(has('nailDamage'))set('nailDamage',5+4*n)}
+function toggleCharm(i){const k='gotCharm_'+i,on=!g(k,false);set(k,on);if(!on&&has('equippedCharm_'+i))set('equippedCharm_'+i,false);
+ if(i===36&&has('royalCharmState'))set('royalCharmState',on?Math.max(3,g('royalCharmState')):0);if(has('newCharm_'+i)&&on)set('newCharm_'+i,false);syncCharms()}
+function toggleEquip(i){if(!g('gotCharm_'+i,false))return;set('equippedCharm_'+i,!g('equippedCharm_'+i,false));syncCharms()}
+
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,d=t.dataset;
+ if(a==='pick'){$('#fi').click();return}
+ if(a==='tab'){S.tab=d.v;renderNav();renderMain();return}
+ if(a==='rawtoggle'){S.raw=!S.raw;if(S.raw)S.rawText=pretty(S.cur);renderRaw();return}
+ if(a==='rawapply'){try{const o=JSON.parse($('#rawta').value);if(!o.playerData)throw 0;S.sceneDirty=JSON.stringify(S.orig.sceneData)!==JSON.stringify(o.sceneData);S.cur=o;S.raw=false;renderAll();toast('Raw JSON applied')}catch(x){alert('Invalid JSON (needs a playerData section).')}return}
+ if(a==='reset'){S.cur=JSON.parse(JSON.stringify(S.orig));S.sceneDirty=false;renderMain();renderSide();return}
+ if(a==='dlpc'||a==='dlsw'){try{const j=JSON.stringify(S.cur);const data=a==='dlpc'?encodeSave(j):j;dl(data,a==='dlpc'?'user1.dat':'plain.dat')}catch(x){alert('Could not export: '+x.message)}return}
+ if(!S.cur&&a!=='histload'&&a!=='histdel')return;
+ if(a==='mask')setMasks(+d.n===g('maxHealth')?+d.n-1:+d.n);
+ else if(a==='masks')setMasks(g('maxHealth',5)+(+d.d));
+ else if(a==='vessel')setVessels(+d.n===Math.round(g('MPReserveMax')/33)?+d.n-1:+d.n);
+ else if(a==='vessels')setVessels(Math.round(g('MPReserveMax')/33)+(+d.d));
+ else if(a==='nail')setNail(+d.n);
+ else if(a==='step'){const k=d.k;set(k,Math.max(+(d.min||0),Math.min(+(d.max||999999999),g(k)+ +d.d)));special(k)}
+ else if(a==='bossall'){bossKeys().forEach(k=>set(k,true))}
+ else if(a==='mapall'){Object.keys(pd()).forEach(k=>{if(typeof pd()[k]==='boolean'&&/^map[A-Z]/.test(k))set(k,true)})}
+ else if(a==='jall'){enemies().forEach(([n,v])=>{if(v.killed)set(v.killed,true);if(v.kills)set(v.kills,0)})}
+ else if(a==='toggle'){set(d.k,!g(d.k,false))}
+ else if(a==='charm')toggleCharm(+d.i);
+ else if(a==='equip'){e.stopPropagation();toggleEquip(+d.i)}
+ else if(a==='spell'){set(d.k,+d.n===g(d.k)?+d.n-1:+d.n);if(has('hasSpell'))set('hasSpell',['fireballLevel','quakeLevel','screamLevel'].some(k=>g(k)>0))}
+ else if(a==='filter'){S.filter=d.v}
+ else if(a==='slots'){set('charmSlots',Math.max(0,Math.min(11,g('charmSlots')+ +d.d)));syncCharms()}
+ else if(a==='maxcharms'){for(let i=1;i<=40;i++)if(has('gotCharm_'+i))set('gotCharm_'+i,true);syncCharms()}
+ else if(a==='unequipall'){for(let i=1;i<=40;i++)if(has('equippedCharm_'+i))set('equippedCharm_'+i,false);syncCharms()}
+ else if(a==='allabil'){ABIL.forEach(x=>{if(has(x[0]))set(x[0],true)})}
+ else if(a==='histload'){const h=hist()[+d.i];if(h){openSave(JSON.parse(h.json),h.name)}return}
+ else if(a==='histdel'){const h=hist();h.splice(+d.i,1);try{localStorage.setItem('hollowHistory',JSON.stringify(h))}catch(x){}}
+ renderMain();
+ renderSide();
+});
+
+document.addEventListener('change',e=>{const t=e.target;
+ if(t.id==='fi'){loadFile(t.files[0]);t.value='';return}
+ if(t.id==='sw'){S.sw=t.checked;renderMain();return}
+ if(t.dataset.k&&S.cur){const k=t.dataset.k;if(t.type==='number'){let v=parseFloat(t.value);if(isNaN(v))v=0;set(k,Number.isInteger(g(k))?Math.round(v):v)}else if(t.type==='checkbox')set(k,t.checked);else set(k,t.value);
+  special(k);if(k==='geo')set(k,Math.max(0,g(k)));renderMain();renderSide()}});
+
+let searchTimer=null;
+document.addEventListener('input',e=>{
+  if(e.target.id==='q'){
+    S.q=e.target.value;
+    clearTimeout(searchTimer);
+    searchTimer=setTimeout(()=>{
+      const p=e.target.selectionStart;
+      renderMain();
+      const q=$('#q');
+      if(q){q.focus();q.setSelectionRange(p,p)}
+    },80);
+  }
+});
+
+/* drag & drop */
+let dc=0;
+addEventListener('dragenter',e=>{e.preventDefault();dc++;if(!S.drag){S.drag=true;renderCover()}});
+addEventListener('dragleave',e=>{dc--;if(dc<=0){dc=0;S.drag=false;renderCover()}});
+addEventListener('dragover',e=>e.preventDefault());
+addEventListener('drop',e=>{e.preventDefault();dc=0;S.drag=false;renderCover();loadFile(e.dataTransfer.files[0])});
+function dl(data,name){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/octet-stream'}));a.download=name;document.body.append(a);a.click();a.remove()}
+
+/* ============ Views ============ */
+function nice(k){const r=k.replace(/^(killed|kills|newData|defeated|map|has)(?=[A-Z])/,'').replace(/(Defeated|Killed)$/,'').replace(/_/g,' ').replace(/([a-z])([A-Z])/g,'$1 $2').replace(/([A-Za-z])(\d)/g,'$1 $2').trim();return r?r[0].toUpperCase()+r.slice(1):k}
+function numCard(k,lab,min,max,steps,imgKey){const v=g(k),key=imgKey||k,st=steps||1;
+ return `<div class="num">${img(imgFor(k,imgKey),48,lab,key==='charmSlots'?NOTCH:'')}<div class="nl">${lab}<small>${k}</small></div><div class="ctl"><button class="sb" data-a="step" data-k="${k}" data-d="-${st}" data-min="${min||0}" data-max="${max||999999999}">−</button><input type="number" data-k="${k}" value="${v}"><button class="sb" data-a="step" data-k="${k}" data-d="${st}" data-min="${min||0}" data-max="${max||999999999}">+</button></div></div>`}
+function chkCard(k,lab,f,sub){const on=g(k,false);return `<div class="num chk ${on?'':'off'}" data-a="toggle" data-k="${k}">${img(f||'',48,lab)}<div class="nl">${lab}<small>${sub||k}</small></div><input type="checkbox" ${on?'checked':''} tabindex="-1"></div>`}
+function abilTile(x){if(!has(x[0]))return'';const on=g(x[0],false);return `<div class="tile ${on?'on':'off'}" data-a="toggle" data-k="${x[0]}" title="${x[1]}">${img(x[2],54,x[1])}<div class="nm">${x[1]}</div></div>`}
+function vOverview(){const mx=g('maxHealth',5),ves=Math.round(g('MPReserveMax',0)/33),nail=g('nailSmithUpgrades',0);
+ let masks='';for(let i=1;i<=9;i++)masks+=`<div class="mk ${i<=mx?'':'off'}" data-a="mask" data-n="${i}" title="${i} masks">${img(KIMG.heartPieces,40,'Mask')}</div>`;
+ let ves3='';for(let i=1;i<=3;i++)ves3+=`<div class="mk ${i<=ves?'':'off'}" data-a="vessel" data-n="${i}" title="${i} vessels">${img(KIMG.soulVessel,44,'Soul vessel')}</div>`;
+ return `<h2>Overview</h2><div class="row r3">
+ <div class="card"><div class="lab">Health · masks</div><div class="masks">${masks}</div><div class="step"><button data-a="masks" data-d="-1">−</button><button data-a="masks" data-d="1">+</button><em>${mx} / 9 masks</em></div></div>
+ <div class="card"><div class="lab">Soul vessels</div><div class="masks">${ves3}</div><div class="step"><button data-a="vessels" data-d="-1">−</button><button data-a="vessels" data-d="1">+</button><em>${ves} extra vessels</em></div></div>
+ <div class="card"><div class="lab">Geo</div><div style="display:flex;gap:12px;align-items:center">${img(KIMG.geo,48,'Geo')}<input class="geo" type="number" data-k="geo" value="${g('geo')}"></div><div class="step"><button data-a="step" data-k="geo" data-d="-1000">−1k</button><button data-a="step" data-k="geo" data-d="1000">+1k</button><button data-a="step" data-k="geo" data-d="100000">+100k</button><em>was ${S.orig.playerData.geo??'—'}</em></div></div></div>
+ <div class="row r2"><div class="card"><div class="lab">Nail upgrade</div><div style="display:flex;gap:12px;align-items:center">${img(NAILS[nail]||NAILS[0],52,'Nail')}<div style="color:#b5b5b5;font-size:12.5px">${NAILNAMES[nail]||'?'}<br>Damage ${5+4*nail}</div></div>
+ <div class="seg">${['Old','Sharp','Chan.','Coil','Pure'].map((n,i)=>`<button class="${i===nail?'s':''}" data-a="nail" data-n="${i}">${n}</button>`).join('')}</div></div>
+ <div class="card"><div class="lab">Abilities</div><div class="tiles">${ABIL.slice(0,7).map(abilTile).join('')}</div></div></div>
+ <div class="head"><h2>Charms</h2><span class="notch">Notches ${equippedSum()} / ${g('charmSlots',0)}</span><span class="sp"></span><button class="btn" data-a="tab" data-v="charms">Open charms →</button></div>`}
+function vCharms(){const f=S.filter,used=equippedSum(),tot=g('charmSlots',0);let cells='';
+ for(let i=1;i<=40;i++){if(!has('gotCharm_'+i))continue;const own=g('gotCharm_'+i,false),eq=g('equippedCharm_'+i,false),c=g('charmCost_'+i,CH[i][2]);
+  if(f==='owned'&&!own||f==='eq'&&!eq||f==='missing'&&own)continue;
+  cells+=`<div class="charm ${own?'owned':'locked'} ${eq?'eq':''}" data-a="charm" data-i="${i}" title="Click to ${own?'remove':'give'}">${eq?'<span class="badge">EQUIPPED</span>':''}${img(CH[i][1],58,CH[i][0])}<div class="cn">${CH[i][0]}</div><div class="nt">${Array.from({length:c},()=>'<i class="on"></i>').join('')}</div>${own?`<button class="eqbtn" data-a="equip" data-i="${i}">${eq?'Unequip':'Equip'}</button>`:''}</div>`}
+ const chip=(v,t)=>`<button class="${f===v?'s':''}" data-a="filter" data-v="${v}">${t}</button>`;
+ return `<div class="head"><h2>Charms</h2><div class="chips">${chip('all','All')}${chip('owned','Owned')}${chip('eq','Equipped')}${chip('missing','Missing')}</div><span class="sp"></span>
+ <span class="notch ${used>tot?'over':''}">Notches ${used} / ${tot}</span><div class="step" style="margin:0"><button data-a="slots" data-d="-1">−</button><button data-a="slots" data-d="1">+</button></div>
+ <button class="btn" data-a="maxcharms">Own all</button><button class="btn" data-a="unequipall">Unequip all</button></div>${cells?`<div class="grid">${cells}</div>`:'<p style="color:var(--mut)">No charms in this filter.</p>'}`}
+function vAbilities(){return `<div class="head"><h2>Abilities</h2><span class="sp"></span><button class="btn" data-a="allabil">Unlock all</button></div><div class="card"><div class="tiles">${ABIL.map(abilTile).join('')||'<span style="color:var(--mut)">No ability fields found in this save.</span>'}</div></div>`}
+function vSpells(){return `<h2>Spells</h2><div class="row" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">${SPELLS.map(s=>{if(!has(s[0]))return'';const lv=g(s[0]);
+  return `<div class="card"><div class="lab">${s[0]}</div><div class="tiles">${[1,2].map(n=>s[n]?`<div class="tile ${lv>=n?'on':'off'}" data-a="spell" data-k="${s[0]}" data-n="${n}" style="width:96px">${img(s[n][1],62,s[n][0])}<div class="nm">${s[n][0]}</div></div>`:'').join('')}</div></div>`}).join('')}</div>`}
+function vItems(){const cnt=[['geo','Geo',0,0,1000],['simpleKeys','Simple Keys',0,4],['rancidEggs','Rancid Eggs',0,999],['ore','Pale Ore',0,999],['dreamOrbs','Essence',0,99999,10],['charmSlots','Charm notches',0,11],['nailSmithUpgrades','Nail upgrades (0-4)',0,4]].filter(x=>has(x[0]));const bl=BOOLS.filter(x=>has(x[0]));
+ return `<h2>Items &amp; Keys</h2><div class="lab">Counters</div><div class="big" style="margin-bottom:24px">${cnt.map(x=>numCard(x[0],x[1],x[2],x[3]||999999999,x[4])).join('')}</div>
+ <div class="lab">Items</div><div class="big">${bl.map(x=>chkCard(x[0],x[1],KIMG[x[0]])).join('')}</div>`}
+function vGrubs(){const L=[['grubsCollected','Grubs rescued',0,46],['grubRewards','Grub rewards claimed',0,46],['heartPieces','Mask shards (toward next mask)',0,3],['vesselFragments','Vessel fragments (toward next vessel)',0,2],['maxHealthBase','Base masks',1,9,1,'heartPieces'],['charmSlots','Charm notches',0,11]].filter(x=>has(x[0]));
+ return `<h2>Grubs &amp; Mask Shards</h2>${L.length?`<div class="big">${L.map(x=>numCard(x[0],x[1],x[2],x[3],x[4],x[5]||(x[0]==='grubRewards'?'grubsCollected':''))).join('')}</div>`:'<p style="color:var(--mut)">No matching fields in this save.</p>'}`}
+const BOSS_FIXED=['killedFalseKnight','killedHollowKnight','killedMageLord','killedInfectedKnight','killedMegaMossCharger','killedMawlek','killedBigFly','killedMantisLord','killedHornet'];
+function bossKeys(){const p=pd();return Object.keys(p).filter(k=>typeof p[k]==='boolean'&&((/Defeated$|^defeated/.test(k)&&!/^(lurien|monomon|hegemol)/.test(k))||BOSS_FIXED.includes(k)))}
+function vBosses(){const ks=bossKeys();return `<div class="head"><h2>Bosses</h2><span class="sp"></span><button class="btn" data-a="bossall">Mark all defeated</button></div>${ks.length?`<div class="big">${ks.map(k=>chkCard(k,bossName(k),bossImg(bossBase(k)))).join('')}</div>`:'<p style="color:var(--mut)">No boss flags found in this save.</p>'}`}
+function vDreamers(){const D=[['lurienDefeated','Lurien the Watcher'],['monomonDefeated','Monomon the Teacher'],['hegemolDefeated','Herrah the Beast']].filter(x=>has(x[0]));
+ return `<h2>Dreamers</h2>${D.length?`<div class="big">${D.map(x=>chkCard(x[0],x[1],npcImg(x[1]))).join('')}</div>`:'<p style="color:var(--mut)">No dreamer flags found in this save.</p>'}${has('guardiansDefeated')?`<div class="big" style="margin-top:16px">${numCard('guardiansDefeated','Dreamers defeated',0,3,1,'guardiansDefeated')}</div>`:''}`}
+function vMap(){const p=pd(),ks=Object.keys(p).filter(k=>typeof p[k]==='boolean'&&/^map[A-Z]/.test(k));const x=['hasMap','hasQuill'].filter(has);
+ const card=k=>{const a=AREAS[k];return a?chkCard(k,a[0],enemyImg(a[1]),k+' · icon: '+a[1]):chkCard(k,k==='mapAllRooms'?'All rooms':nice(k),k==='mapAllRooms'?KIMG.hasQuill:'')};
+ return `<div class="head"><h2>Map &amp; Areas</h2><span class="sp"></span><button class="btn" data-a="mapall">Reveal all areas</button></div><div class="big">${x.map(k=>chkCard(k,k==='hasQuill'?'Map and Quill':'Map',KIMG[k])).join('')}${ks.map(card).join('')}</div>${ks.length||x.length?'':'<p style="color:var(--mut)">No map flags found in this save.</p>'}`}
+function enemies(){const p=pd(),m={};Object.keys(p).forEach(k=>{let r;if(r=/^killed([A-Z].*)$/.exec(k))(m[r[1]]=m[r[1]]||{}).killed=k;else if(r=/^kills([A-Z].*)$/.exec(k))(m[r[1]]=m[r[1]]||{}).kills=k;else if(r=/^newData([A-Z].*)$/.exec(k))(m[r[1]]=m[r[1]]||{}).nw=k});return Object.entries(m).filter(([n,v])=>v.killed||v.kills)}
+function vJournal(){const q=S.q.trim().toLowerCase();let E=enemies().filter(([n])=>!q||enemyName(n).toLowerCase().includes(q)||n.toLowerCase().includes(q));const tot=E.length;E=E.slice(0,150);
+ return `<div class="head"><h2>Journal</h2><input type="text" id="q" placeholder="Search enemies…" value="${esc(S.q)}" style="flex:1;max-width:320px"><span class="sp"></span><button class="btn" data-a="jall">Complete all entries</button></div>
+ <p style="color:var(--mut);font-size:12px;margin-bottom:12px">Kills left = 0 means the entry is complete. Showing ${E.length} of ${tot}.</p>
+ <div class="vlist"><div class="jrow h"><span>Enemy</span><span>Defeated</span><span>Kills left</span><span>New</span></div>${E.map(([n,v])=>{const nm=enemyName(n);return `<div class="jrow"><span class="jn">${img(enemyImg(nm),38,nm)}<span>${esc(nm)}</span></span>${v.killed?`<input type="checkbox" data-k="${v.killed}" ${g(v.killed,false)?'checked':''}>`:'<span></span>'}${v.kills?`<input type="number" data-k="${v.kills}" value="${g(v.kills)}">`:'<span></span>'}${v.nw?`<input type="checkbox" data-k="${v.nw}" ${g(v.nw,false)?'checked':''}>`:'<span></span>'}</div>`}).join('')}</div>`}
+function vAll(){const q=S.q.trim().toLowerCase();const p=pd();let ks=Object.keys(p).filter(k=>['number','boolean','string'].includes(typeof p[k])&&(!q||k.toLowerCase().includes(q)));const n=ks.length;ks=ks.slice(0,150);
+ return `<div class="head"><h2>All values</h2><input type="text" id="q" placeholder="Search keys (e.g. killed, grub, bench)…" value="${esc(S.q)}" style="flex:1;max-width:420px"></div>
+ <p style="color:var(--mut);font-size:12px;margin-bottom:12px">Every simple value in playerData — bosses, map flags, journal, etc. Showing ${ks.length} of ${n}.</p><div class="vlist">${ks.map(k=>{const v=p[k];return `<div class="vrow"><span>${esc(k)}</span>${typeof v==='boolean'?`<input type="checkbox" data-k="${esc(k)}" ${v?'checked':''}>`:`<input type="${typeof v==='number'?'number':'text'}" data-k="${esc(k)}" value="${esc(v)}">`}</div>`}).join('')}</div>`}
+function vHistory(){const h=hist();return `<h2>Recent files</h2><p style="color:var(--mut);font-size:12px;margin-bottom:14px">Stored only in this browser. Not a substitute for backups.</p><div class="hist">${h.length?h.map((x,i)=>`<div class="hitem"><div style="flex:1"><b style="font-weight:500">${esc(x.name)}</b><div style="font-size:11.5px;color:var(--mut)">${new Date(x.date).toLocaleString()}</div></div><button class="btn" data-a="histload" data-i="${i}">Open</button><button class="btn" data-a="histdel" data-i="${i}">Remove</button></div>`).join(''):'<span style="color:var(--mut)">Nothing yet.</span>'}</div>`}
+function vDrop(){return `<div class="drop"><h1>HOLLOW KNIGHT SAVE EDITOR</h1><p>Drop your Hollow Knight save file here (<b>user1.dat</b>), or choose it below.<br>Make a backup of the original first. Everything runs in your browser; nothing is uploaded.</p><button class="btn p" data-a="pick">Select save file</button>
+ <div class="opt"><label><input type="checkbox" id="sw" ${S.sw?'checked':''}> Switch save (plain-text JSON)</label></div></div>${hist().length?`<div style="max-width:620px;margin:26px auto">${vHistory()}</div>`:''}`}
+
+const NAV=[['SAVE'],['overview','Overview','6/6a/Quick_Focus.png/69px-Quick_Focus.png'],['charms','Charms','7/78/Grubsong.png/72px-Grubsong.png'],['abilities','Abilities','b/bf/Icon_HK_Mantis_Claw.png/72px-Icon_HK_Mantis_Claw.png'],['spells','Spells','a/ab/Icon_HK_Vengeful_Spirit.png/72px-Icon_HK_Vengeful_Spirit.png'],['items','Items & Keys',KIMG.simpleKeys],['PROGRESS'],['bosses','Bosses',''],['grubs','Grubs & Mask Shards',KIMG.heartPieces],['map','Map & Areas',KIMG.hasQuill],['dreamers','Dreamers',DREAMER_IMG],['journal','Journal',''],['ADVANCED'],['all','All values',''],['HISTORY'],['history','Recent files','']];
+
+function renderCover(){$('#cover-slot').innerHTML=S.drag?'<div class="cover">DROP SAVE FILE</div>':''}
+function renderTop(){
+  $('#top-slot').innerHTML=`<div class="logo">HOLLOW KNIGHT<small>SAVE EDITOR</small></div>${S.cur?`<div class="file">Loaded: <b>${esc(S.name)}</b> · decoded ✓</div>`:''}<div class="sp"></div>
+  <button class="btn" data-a="pick">${S.cur?'Open another':'Open file'}</button><button class="btn" data-a="reset" ${S.cur?'':'disabled'}>Reset</button><button class="btn" data-a="rawtoggle" ${S.cur?'':'disabled'}>Raw JSON</button><button class="btn" data-a="dlsw" ${S.cur?'':'disabled'}>Download Switch</button><button class="btn p" data-a="dlpc" ${S.cur?'':'disabled'}>Download PC save</button>`;
+}
+function renderNav(){
+  $('#nav-slot').innerHTML=NAV.map(n=>n.length===1?`<h6>${n[0]}</h6>`:`<button class="${S.tab===n[0]?'a':''}" data-a="tab" data-v="${n[0]}" ${S.cur||n[0]==='history'?'':'disabled'}>${img(n[2],24,'')}<span>${n[1]}</span></button>`).join('');
+}
+function renderMain(){
+  const main=!S.cur?vDrop():{overview:vOverview,charms:vCharms,abilities:vAbilities,spells:vSpells,items:vItems,bosses:vBosses,grubs:vGrubs,map:vMap,dreamers:vDreamers,journal:vJournal,all:vAll,history:vHistory}[S.tab]();
+  $('#main-slot').innerHTML=main;
+}
+function renderSide(){
+  const d=S.cur?diffs():[];
+  $('#side-slot').innerHTML=S.cur?`<h2 style="font-size:15px">Pending changes ${d.length?`(${d.length})`:''}</h2>${d.length?d.slice(0,25).map(x=>`<div class="diff"><b>${esc(label(x[0]))}</b><div><s>${esc(x[1])}</s> → <u>${esc(x[2])}</u></div></div>`).join('')+(d.length>25?`<div class="hint">+ ${d.length-25} more</div>`:''):'<div class="hint" style="margin-top:0">No changes yet.</div>'}
+  <div class="lab" style="margin-top:22px">Raw JSON (live preview)</div><div class="raw">${d.length?d.slice(0,12).map(x=>`"${esc(x[0])}": ${esc(x[2])},`).join('<br>')+(d.length>12?'<br>…':''):'—'}</div>
+  <div class="hint">Download PC save → rename to <b style="color:#afafaf;font-weight:500">user1.dat</b> and replace the one in your Hollow Knight save folder (keep the backup).</div>`:`<div class="hint" style="margin-top:0">Load a save to see your pending changes here.</div>`;
+}
+function renderRaw(){
+  $('#raw-slot').innerHTML=S.raw?`<div class="rawbox"><div class="bar"><b style="font-weight:500">Raw JSON</b><span class="sp"></span><button class="btn p" data-a="rawapply">Apply</button><button class="btn" data-a="rawtoggle">Close</button></div><textarea id="rawta" spellcheck="false">${esc(S.rawText)}</textarea></div>`:'';
+}
+function renderToast(){
+  $('#toast-slot').innerHTML=S.toast?`<div class="toast">${esc(S.toast)}</div>`:'';
+}
+function renderAll(){renderCover();renderTop();renderNav();renderMain();renderSide();renderRaw();renderToast()}
+
+renderAll();
+</script>
+</body>
+</html>
